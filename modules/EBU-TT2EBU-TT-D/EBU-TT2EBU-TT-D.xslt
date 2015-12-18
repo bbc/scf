@@ -448,43 +448,52 @@ limitations under the License.
                 <xsl:with-param name="frameRate" select="$frameRate" />
             </xsl:apply-templates>
         </xsl:variable>
-        <tt:p
-            begin="{$begin}"
-            end="{$end}">
-            <xsl:if test="@style != ''">
-                <xsl:attribute name="style"><xsl:value-of select="@style"/></xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@region != ''">
-                <xsl:attribute name="region"><xsl:value-of select="@region"/></xsl:attribute>
-            </xsl:if>
-            <xsl:attribute name="xml:id"><xsl:value-of select="@xml:id"/></xsl:attribute>
-            <!--@ Copy attributes if they're not empty -->
-            <xsl:if test="@xml:space != ''">
-                <xsl:attribute name="xml:space">
-                    <xsl:value-of select="@xml:space"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@xml:lang != ''">
-                <xsl:attribute name="xml:lang">
-                    <xsl:value-of select="@xml:lang"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@ttm:role != ''">
-                <xsl:attribute name="ttm:role">
-                    <xsl:value-of select="@ttm:role"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@ttm:agent != ''">
-                <xsl:attribute name="ttm:agent">
-                    <xsl:value-of select="@ttm:agent"/>
-                </xsl:attribute>
-            </xsl:if>
-            <!--@ As multiple children are possible, match to the first -->
-            <xsl:apply-templates select="child::node()[1]">
-                <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
-                <xsl:with-param name="frameRate" select="$frameRate" />
-            </xsl:apply-templates>
-        </tt:p>
+
+        <!--@ Only display this p if its timecodes are not negative -->
+        <xsl:choose>
+            <xsl:when test="not (contains($begin,'-') or contains($end,'-'))">
+            <tt:p
+                begin="{$begin}"
+                end="{$end}">
+                <xsl:if test="@style != ''">
+                    <xsl:attribute name="style"><xsl:value-of select="@style"/></xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@region != ''">
+                    <xsl:attribute name="region"><xsl:value-of select="@region"/></xsl:attribute>
+                </xsl:if>
+                <xsl:attribute name="xml:id"><xsl:value-of select="@xml:id"/></xsl:attribute>
+                <!--@ Copy attributes if they're not empty -->
+                <xsl:if test="@xml:space != ''">
+                    <xsl:attribute name="xml:space">
+                        <xsl:value-of select="@xml:space"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@xml:lang != ''">
+                    <xsl:attribute name="xml:lang">
+                        <xsl:value-of select="@xml:lang"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@ttm:role != ''">
+                    <xsl:attribute name="ttm:role">
+                        <xsl:value-of select="@ttm:role"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@ttm:agent != ''">
+                    <xsl:attribute name="ttm:agent">
+                        <xsl:value-of select="@ttm:agent"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <!--@ As multiple children are possible, match to the first -->
+                <xsl:apply-templates select="child::node()[1]">
+                    <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
+                    <xsl:with-param name="frameRate" select="$frameRate" />
+                </xsl:apply-templates>
+            </tt:p>
+        </xsl:when>
+            <xsl:otherwise>
+                <xsl:message terminate="no">Pruning a p element whose begin or end times would be offset to a negative value</xsl:message>
+            </xsl:otherwise>
+        </xsl:choose>
         <!--@ As multiple tt:p elements are possible, match the following -->
         <xsl:apply-templates select="following-sibling::*[1]">
             <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
@@ -492,29 +501,161 @@ limitations under the License.
         </xsl:apply-templates>
     </xsl:template>
     
+
+    <xsl:template match="tt:span">
+        <!--** Contains text and references new styling. Steps: -->
+        <xsl:param name="legacyTimeBase" />
+        <xsl:param name="frameRate" />
+
+        <!--@ Convert begin attribute into media timeCodeFormat if necessary -->
+        <xsl:variable name="begin">
+            <xsl:if test="@begin != ''">
+                <xsl:apply-templates select="@begin">
+                    <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
+                    <xsl:with-param name="frameRate" select="$frameRate" />
+                </xsl:apply-templates>
+            </xsl:if>
+        </xsl:variable>
+
+        <!--@ Convert end attribute into media timeCodeFormat if necessary -->
+        <xsl:variable name="end">
+            <xsl:if test="@end != ''">
+                <xsl:apply-templates select="@end">
+                    <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase"/>
+                    <xsl:with-param name="frameRate" select="$frameRate"/>
+                </xsl:apply-templates>
+            </xsl:if>
+        </xsl:variable>
+
+        <!--@ Only display this span if its timecodes are not negative -->
+        <xsl:choose>
+        <xsl:when test="not (contains($begin,'-') or contains($end,'-'))">
+            <tt:span>
+                <!--@ Copy attribute values if possible and existent -->
+                <xsl:if test="@xml:id != ''">
+                    <xsl:attribute name="xml:id">
+                        <xsl:value-of select="@xml:id"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@xml:space != ''">
+                    <xsl:attribute name="xml:space">
+                        <xsl:value-of select="@xml:space"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@xml:lang != ''">
+                    <xsl:attribute name="xml:lang">
+                        <xsl:value-of select="@xml:lang"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@style != ''">
+                    <xsl:attribute name="style">
+                        <xsl:value-of select="@style"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@ttm:role != ''">
+                    <xsl:attribute name="ttm:role">
+                        <xsl:value-of select="@ttm:role"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <xsl:if test="@ttm:agent != ''">
+                    <xsl:attribute name="ttm:agent">
+                        <xsl:value-of select="@ttm:agent"/>
+                    </xsl:attribute>
+                </xsl:if>
+                <!--@ Convert value of the begin attribute if it's set -->
+                <xsl:if test="$begin != ''">
+                    <xsl:attribute name="begin"><xsl:value-of select="$begin"/></xsl:attribute>
+                </xsl:if>
+                <!--@ Convert value of the end attribute if it's set -->
+                <xsl:if test="$end != ''">
+                    <xsl:attribute name="end"><xsl:value-of select="$end"/></xsl:attribute>
+                </xsl:if>
+                <!--@ As a tt:span element theoretically can have tt:br children, map the first child -->
+                <xsl:apply-templates select="child::node()[1]"/>
+            </tt:span>
+        </xsl:when>
+        <xsl:otherwise>
+        	<xsl:message terminate="no">Pruning a span element whose begin or end times would be offset to a negative value</xsl:message>
+        </xsl:otherwise>
+        </xsl:choose>
+        <!--@ As multiple tt:span elements as well as tt:br elements are possible, map the first sibling -->
+        <xsl:apply-templates select="following-sibling::node()[1]"/>
+    </xsl:template>
+    
+    <xsl:template match="text()">
+        <!--** Processes text nodes. Steps: -->
+        <xsl:param name="legacyTimeBase" />
+        <xsl:param name="frameRate" />
+        <xsl:value-of select="."/>
+        <!--@ If the text-node is not contained within a tt:span element, match the following sibling node -->
+        <xsl:if test="name(parent::*[1]) != 'tt:span'">
+            <xsl:apply-templates select="following-sibling::node()[1]">
+                <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
+                <xsl:with-param name="frameRate" select="$frameRate" />
+            </xsl:apply-templates>
+        </xsl:if>
+    </xsl:template>
+    
+    <xsl:template match="tt:br">
+        <!--** Processes linebreaks. Steps:-->
+        <xsl:param name="legacyTimeBase" />
+        <xsl:param name="frameRate" />
+        <tt:br/>
+        <!--@ Match following sibling node -->  
+        <xsl:apply-templates select="following-sibling::node()[1]">
+            <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
+            <xsl:with-param name="frameRate" select="$frameRate" />
+        </xsl:apply-templates>
+    </xsl:template>
+
     <xsl:template match="@begin">
         <!--** Checks the begin timestamps validity and converts them to media timeCodeFormat if necessary. Steps:  -->
         <xsl:param name="legacyTimeBase" />
         <xsl:param name="frameRate" />
         <xsl:variable name="begin" select="normalize-space(.)"/>
+        <xsl:call-template name="beginOrEndConversion">
+            <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase"/>
+            <xsl:with-param name="frameRate" select="$frameRate"/>
+            <xsl:with-param name="inputValue" select="$begin"/>
+        </xsl:call-template>
+    </xsl:template>
+
+    <xsl:template match="@end">
+        <!--** Checks the end timestamps validity and converts them to media timeCodeFormat if necessary. Steps:  -->
+        <xsl:param name="legacyTimeBase" />
+        <xsl:param name="frameRate" />
+        <xsl:variable name="end" select="normalize-space(.)"/>
+        <xsl:call-template name="beginOrEndConversion">
+            <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase"/>
+            <xsl:with-param name="frameRate" select="$frameRate"/>
+            <xsl:with-param name="inputValue" select="$end"/>
+        </xsl:call-template>
+    </xsl:template>
+
+    <xsl:template name="beginOrEndConversion">
+        <!--** Checks the begin timestamps validity and converts them to media timeCodeFormat if necessary. Steps:  -->
+        <xsl:param name="legacyTimeBase" />
+        <xsl:param name="frameRate" />
+        <xsl:param name="inputValue"/>
+        <!--<xsl:variable name="begin" select="normalize-space(.)"/>-->
         <!--@ Check if the attribute's content can be cast as a number if the ':' are not regarded -->
-        <xsl:if test="number(translate($begin, ':', '')) != number(translate($begin, ':', ''))">
+        <xsl:if test="number(translate($inputValue, ':', '')) != number(translate($inputValue, ':', ''))">
             <xsl:message terminate="yes">
-                The begin attribute of the tt:p element has invalid content. 
+                The begin attribute of the tt:p element has invalid content.
             </xsl:message>
         </xsl:if>
         <!--@ Split timestamp in hours, minutes, seconds and frames / fraction -->
-        <xsl:variable name="beginHours" select="substring($begin, 1, 2)"/>
-        <xsl:variable name="beginMinutes" select="substring($begin, 4, 2)"/>
-        <xsl:variable name="beginSeconds" select="substring($begin, 7, 2)"/>
+        <xsl:variable name="beginHours" select="substring($inputValue, 1, 2)"/>
+        <xsl:variable name="beginMinutes" select="substring($inputValue, 4, 2)"/>
+        <xsl:variable name="beginSeconds" select="substring($inputValue, 7, 2)"/>
         <!--@ Check timeCodeFormat of the source and interrupt if it's neither 'media' nor 'smpte' -->
         <xsl:variable name="beginFrames">
             <xsl:choose>
                 <xsl:when test="$legacyTimeBase = 'smpte'">
-                    <xsl:value-of select="substring($begin, 10, 2)"/>
+                    <xsl:value-of select="substring($inputValue, 10, 2)"/>
                 </xsl:when>
                 <xsl:when test="$legacyTimeBase = 'media'">
-                    <xsl:value-of select="substring($begin, 10, 3)"/>
+                    <xsl:value-of select="substring($inputValue, 10, 3)"/>
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:message terminate="yes">
@@ -527,11 +668,11 @@ limitations under the License.
             <xsl:when test="$legacyTimeBase = 'smpte'">
                 <xsl:choose>
                     <!--@ Check the timestamp's validity -->
-                    <xsl:when test="string-length($begin) = 11 and
+                    <xsl:when test="string-length($inputValue) = 11 and
                         number($beginHours) &gt;= 0 and number($beginHours) &lt; 24 and
                         number($beginMinutes) &gt;= 0 and number($beginMinutes) &lt; 60 and
                         number($beginSeconds) &gt;= 0 and number($beginSeconds) &lt; 60 and
-                        number($beginFrames) &gt;= 0 and number($beginFrames) &lt; 25 and 
+                        number($beginFrames) &gt;= 0 and number($beginFrames) &lt; 25 and
                         $frameRate = '25'">
                         <!--@ Calculate time regarding offset -->
                         <xsl:call-template name="timestampConversion">
@@ -546,7 +687,7 @@ limitations under the License.
                     <!--@ Interrupt, if the value is invalid for 25 frames -->
                     <xsl:otherwise>
                         <xsl:message terminate="yes">
-                            The begin attribute should use a valid smpte timeformat if 'smpte' is given as timeCodeFormat. 
+                            The begin or end attribute should use a valid smpte timeformat if 'smpte' is given as timeCodeFormat.
                         </xsl:message>
                     </xsl:otherwise>
                 </xsl:choose>
@@ -554,7 +695,7 @@ limitations under the License.
             <xsl:when test="$legacyTimeBase = 'media'">
                 <xsl:choose>
                     <!--@ Check the timestamp's validity -->
-                    <xsl:when test="string-length($begin) = 12 and
+                    <xsl:when test="string-length($inputValue) = 12 and
                         number($beginHours) &gt;= 0 and number($beginHours) &lt; 24 and
                         number($beginMinutes) &gt;= 0 and number($beginMinutes) &lt; 60 and
                         number($beginSeconds) &gt;= 0 and number($beginSeconds) &lt; 60 and
@@ -572,7 +713,7 @@ limitations under the License.
                     <!--@ Interrupt, if the value is invalid for  25 frames -->
                     <xsl:otherwise>
                         <xsl:message terminate="yes">
-                            The begin attribute should use a valid media timeformat if 'media' is given as timeCodeFormat. 
+                            The begin or end attribute should use a valid media timeformat if 'media' is given as timeCodeFormat.
                         </xsl:message>
                     </xsl:otherwise>
                 </xsl:choose>
@@ -585,101 +726,7 @@ limitations under the License.
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
-    
-    <xsl:template match="@end">
-        <!--** Checks the end timestamps validity and converts them to media timeCodeFormat if necessary. Steps:  -->
-        <xsl:param name="legacyTimeBase" />
-        <xsl:param name="frameRate" />
-        <xsl:variable name="end" select="normalize-space(.)"/>
-        <!--@ Check if the attribute's content can be cast as a number if the ':' are not regarded -->
-        <xsl:if test="number(translate($end, ':', '')) != number(translate($end, ':', ''))">
-            <xsl:message terminate="yes">
-                The begin attribute of the tt:p element has invalid content. 
-            </xsl:message>
-        </xsl:if>
-        <!--@ Split timestamp in hours, minutes, seconds and frames / fraction -->
-        <xsl:variable name="endHours" select="substring($end, 1, 2)"/>
-        <xsl:variable name="endMinutes" select="substring($end, 4, 2)"/>
-        <xsl:variable name="endSeconds" select="substring($end, 7, 2)"/>
-        <!--@ Check timeCodeFormat of the source and interrupt if it's neither 'media' nor 'smpte' -->
-        <xsl:variable name="endFrames">
-            <xsl:choose>
-                <xsl:when test="$legacyTimeBase = 'smpte'">
-                    <xsl:value-of select="substring($end, 10, 2)"/>
-                </xsl:when>
-                <xsl:when test="$legacyTimeBase = 'media'">
-                    <xsl:value-of select="substring($end, 10, 3)"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:message terminate="yes">
-                        The selected timeCodeFormat is unknown. Only 'media' and 'smpte' are supported.
-                    </xsl:message>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
-        <xsl:choose>
-            <xsl:when test="$legacyTimeBase = 'smpte'">
-                <xsl:choose>
-                    <!--@ Check the timestamp's validity -->
-                    <xsl:when test="string-length($end) = 11 and
-                        number($endHours) &gt;= 0 and number($endHours) &lt; 24 and
-                        number($endMinutes) &gt;= 0 and number($endMinutes) &lt; 60 and
-                        number($endSeconds) &gt;= 0 and number($endSeconds) &lt; 60 and
-                        number($endFrames) &gt;= 0 and number($endFrames) &lt; 25 and 
-                        $frameRate = '25'">
-                        <!--@ Calculate time regarding offset -->
-                        <xsl:call-template name="timestampConversion">
-                            <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase"/>
-                            <xsl:with-param name="frameRate" select="$frameRate"/>
-                            <xsl:with-param name="frames" select="$endFrames"/>
-                            <xsl:with-param name="seconds" select="$endSeconds"/>
-                            <xsl:with-param name="minutes" select="$endMinutes"/>
-                            <xsl:with-param name="hours" select="$endHours"/>
-                        </xsl:call-template>
-                    </xsl:when>
-                    <!--@ Interrupt, if the value is invalid for 25 frames -->
-                    <xsl:otherwise>
-                        <xsl:message terminate="yes">
-                            The end attribute should use a valid smpte timeformat if 'smpte' is given as timeCodeFormat. 
-                        </xsl:message>
-                    </xsl:otherwise>
-                </xsl:choose>                
-            </xsl:when>
-            <xsl:when test="$legacyTimeBase = 'media'">
-                <xsl:choose>
-                    <!--@ Check the timestamp's validity -->
-                    <xsl:when test="string-length($end) = 12 and
-                        number($endHours) &gt;= 0 and number($endHours) &lt; 24 and
-                        number($endMinutes) &gt;= 0 and number($endMinutes) &lt; 60 and
-                        number($endSeconds) &gt;= 0 and number($endSeconds) &lt; 60 and
-                        number($endFrames) &gt;= 0 and number($endFrames) &lt;= 999">
-                        <!--@ Calculate time regarding offset -->
-                        <xsl:call-template name="timestampConversion">
-                            <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase"/>
-                            <xsl:with-param name="frameRate" select="$frameRate"/>
-                            <xsl:with-param name="frames" select="$endFrames"/>
-                            <xsl:with-param name="seconds" select="$endSeconds"/>
-                            <xsl:with-param name="minutes" select="$endMinutes"/>
-                            <xsl:with-param name="hours" select="$endHours"/>
-                        </xsl:call-template>
-                    </xsl:when>
-                    <!--@ Interrupt, if the value is invalid for 25 frames -->
-                    <xsl:otherwise>
-                        <xsl:message terminate="yes">
-                            The end attribute should use a valid media timeformat if 'media' is given as timeCodeFormat. 
-                        </xsl:message>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:when>
-            <!--@ Interrupt if the source's timeCodeFormat is neither 'media' nor 'smpte' -->
-            <xsl:otherwise>
-                <xsl:message terminate="yes">
-                    The selected timeCodeFormat is unknown. Only 'media' and 'smpte' are supported.
-                </xsl:message>
-            </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
-    
+
     <xsl:template name="timestampConversion">
         <!--** Calculates the timestamp. Steps: -->
         <xsl:param name="hours"/>
@@ -713,8 +760,8 @@ limitations under the License.
                             <xsl:value-of select="$offsetInSeconds *1000"/>
                         </xsl:when>
                         <xsl:when test="$offsetInFrames">
-                            <xsl:value-of select="(substring($offsetInFrames, 1,2) * 3600 + 
-                                substring($offsetInFrames, 4,2) * 60 + 
+                            <xsl:value-of select="(substring($offsetInFrames, 1,2) * 3600 +
+                                substring($offsetInFrames, 4,2) * 60 +
                                 substring($offsetInFrames, 7,2) + (substring($offsetInFrames, 10,2) div $frameRate)) * 1000"/>
                         </xsl:when>
                         <xsl:otherwise>
@@ -722,7 +769,7 @@ limitations under the License.
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                
+
                 <xsl:variable name="mediaHours">
                     <xsl:value-of select="floor(($timestampSummedUp - $offsetSummedUp) div 3600000)"/>
                 </xsl:variable>
@@ -735,7 +782,7 @@ limitations under the License.
                 <xsl:variable name="mediaFrames">
                     <xsl:value-of select="floor((($timestampSummedUp - $offsetSummedUp) mod 3600000) mod 60000) mod 1000"/>
                 </xsl:variable>
-                
+
                 <!--@ Add leading zeros if necessary -->
                 <xsl:variable name="outputHours">
                     <xsl:choose>
@@ -750,7 +797,7 @@ limitations under the License.
                 <xsl:variable name="outputMinutes">
                     <xsl:choose>
                         <xsl:when test="string-length($mediaMinutes) = 1">
-                           <xsl:value-of select="concat('0', $mediaMinutes)"/>
+                            <xsl:value-of select="concat('0', $mediaMinutes)"/>
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:value-of select="$mediaMinutes"/>
@@ -767,12 +814,12 @@ limitations under the License.
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <!--@ Interrupt, if the offset is too large, i.e. produces negative values -->
+                <!--@ If the offset is too large, i.e. produces negative values then we warn but continue processing,
+                      so that we can check the negative timecode and use that fact to exclude the whole element
+                     in which it appears. -->
                 <xsl:if test="$mediaHours &lt; 0 or $mediaMinutes &lt; 0 or $mediaSeconds &lt; 0 or $mediaFrames &lt; 0">
-                    <xsl:message terminate="yes">
-                        The chosen offset would result in a negative timestamp for a time value.
-                    </xsl:message>
-                </xsl:if>           
+                    <xsl:message terminate="no">The chosen offset has resulted in a negative timestamp for a time value.</xsl:message>
+                </xsl:if>
                 <xsl:choose>
                     <!--@ If timebase is media, concatenate the frames to the calculated values -->
                     <xsl:when test="$legacyTimeBase = 'media'">
@@ -793,7 +840,7 @@ limitations under the License.
                                 </xsl:otherwise>
                             </xsl:choose>
                         </xsl:variable>
-                        <xsl:value-of select="concat($outputHours, ':', $outputMinutes, ':', $outputSeconds, '.', $outputFraction)"/>                
+                        <xsl:value-of select="concat($outputHours, ':', $outputMinutes, ':', $outputSeconds, '.', $outputFraction)"/>
                     </xsl:when>
                     <!--@ Interrupt if the source's timeCodeFormat is neither 'media' nor 'smpte' -->
                     <xsl:otherwise>
@@ -805,91 +852,5 @@ limitations under the License.
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
-    
-    <xsl:template match="tt:span">
-        <!--** Contains text and references new styling. Steps: -->
-        <xsl:param name="legacyTimeBase" />
-        <xsl:param name="frameRate" />
-        <tt:span>
-            <!--@ Copy attribute values if possible and existent -->
-            <xsl:if test="@xml:id != ''">
-                <xsl:attribute name="xml:id">
-                    <xsl:value-of select="@xml:id"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@xml:space != ''">
-                <xsl:attribute name="xml:space">
-                    <xsl:value-of select="@xml:space"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@xml:lang != ''">
-                <xsl:attribute name="xml:lang">
-                    <xsl:value-of select="@xml:lang"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@style != ''">
-                <xsl:attribute name="style">
-                    <xsl:value-of select="@style"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@ttm:role != ''">
-                <xsl:attribute name="ttm:role">
-                    <xsl:value-of select="@ttm:role"/>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:if test="@ttm:agent != ''">
-                <xsl:attribute name="ttm:agent">
-                    <xsl:value-of select="@ttm:agent"/>
-                </xsl:attribute>
-            </xsl:if>
-            <!--@ Convert value of the begin attribute if it's set -->
-            <xsl:if test="@begin != ''">
-                <xsl:attribute name="begin">
-                    <xsl:apply-templates select="@begin">
-                        <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
-                        <xsl:with-param name="frameRate" select="$frameRate" />
-                    </xsl:apply-templates>
-                </xsl:attribute>
-            </xsl:if>
-            <!--@ Convert value of the end attribute if it's set -->
-            <xsl:if test="@end != ''">
-                <xsl:attribute name="end">
-                    <xsl:apply-templates select="@end">
-                        <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
-                        <xsl:with-param name="frameRate" select="$frameRate" />
-                    </xsl:apply-templates>
-                </xsl:attribute>
-            </xsl:if>
-            <!--@ As a tt:span element theoretically can have tt:br children, map the first child -->
-            <xsl:apply-templates select="child::node()[1]"/>
-        </tt:span>
-        <!--@ As multiple tt:span elements as well as tt:br elements are possible, map the first sibling -->
-        <xsl:apply-templates select="following-sibling::node()[1]"/>
-    </xsl:template>
-    
-    <xsl:template match="text()">
-        <!--** Processes text nodes. Steps: -->
-        <xsl:param name="legacyTimeBase" />
-        <xsl:param name="frameRate" />
-        <xsl:value-of select="."/>
-        <!--@ If the text-node is not contained within a tt:span element, match the following sibling node -->
-        <xsl:if test="name(parent::*[1]) != 'tt:span'">
-            <xsl:apply-templates select="following-sibling::node()[1]">
-                <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
-                <xsl:with-param name="frameRate" select="$frameRate" />
-            </xsl:apply-templates>
-        </xsl:if>
-    </xsl:template>
-    
-    <xsl:template match="tt:br">
-        <!--** Processes linebreaks. Steps:-->
-        <xsl:param name="legacyTimeBase" />
-        <xsl:param name="frameRate" />
-        <tt:br/>
-        <!--@ Match following sibling node -->  
-        <xsl:apply-templates select="following-sibling::node()[1]">
-            <xsl:with-param name="legacyTimeBase" select="$legacyTimeBase" />
-            <xsl:with-param name="frameRate" select="$frameRate" />
-        </xsl:apply-templates>
-    </xsl:template>
+
 </xsl:stylesheet>   

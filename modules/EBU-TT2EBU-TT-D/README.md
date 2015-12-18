@@ -8,7 +8,7 @@ The implementation of the EBU-TT2EBU-TT-D module is based on the use case of the
 The EBU-TT2EBU-TT-D.xslt provides the following parameter:
 
      - offsetInSeconds
-       Defines the time-offset that's used for the TCI and TCO elements in seconds
+       Defines the time-offset that's used for the TCI and TCO elements in seconds. If applying the time-offset results in negative begin or end times the p or span elements that would fall partially before time 00:00:00 are pruned and a warning is issued.
 
 ## DESCRIPTION
 This transformation assumes that the input EBU-TT file is based on an EBU-STL file and the transformation followed the guidelines of EBU Tech 3360. 
