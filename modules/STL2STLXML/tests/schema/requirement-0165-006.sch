@@ -24,9 +24,10 @@ limitations under the License.
             </assert> 
         </rule>
         <rule context="StlXml/BODY/TTICONTAINER/TTI[2]/TF">
-            <assert test=". = 'pqrstuvwxyz{|}~'">
-                Expected value: "pqrstuvwxyz{|}~" Value from test: "<value-of select="."/>"
+            <let name="expected_value" value="'pqrstuvwxyz{|}~'"/>
+            <assert test=". = $expected_value">
+                Expected value: "<value-of select="$expected_value"/>" Value from test: "<value-of select="."/>"
             </assert> 
         </rule>
-    </pattern>            
+    </pattern>
 </schema>
